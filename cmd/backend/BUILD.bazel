@@ -60,8 +60,6 @@ oci_image_index(
     ],
 )
 
-# Use the value of --embed_label under --stamp, otherwise use a deterministic constant
-# value to ensure cache hits for actions that depend on this.
 expand_template(
     name = "image_tags",
     out = "_stamped.tags.txt",
