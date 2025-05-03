@@ -1,0 +1,15 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "email",
+    srcs = [
+        "smtp_client.go",
+        "template.go",
+    ],
+    importpath = "gomodules.avm99963.com/zenithplanner/internal/email",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//internal/config",
+        "@in_gopkg_gomail_v2//:gomail_v2",
+    ],
+)

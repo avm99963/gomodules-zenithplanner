@@ -1,0 +1,20 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "calendar",
+    srcs = [
+        "client.go",
+        "event_parsing.go",
+        "properties.go",
+        "types.go",
+    ],
+    importpath = "gomodules.avm99963.com/zenithplanner/internal/calendar",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//internal/config",
+        "@org_golang_google_api//calendar/v3:calendar",
+        "@org_golang_google_api//option",
+        "@org_golang_x_oauth2//:oauth2",
+        "@org_golang_x_oauth2//google",
+    ],
+)

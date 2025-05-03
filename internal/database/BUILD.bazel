@@ -1,0 +1,19 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "database",
+    srcs = [
+        "calendar_event_cache.go",
+        "date_utils.go",
+        "db.go",
+        "schedule_entries.go",
+        "sync_state.go",
+    ],
+    importpath = "gomodules.avm99963.com/zenithplanner/internal/database",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//internal/config",
+        "@com_github_jackc_pgx_v5//:pgx",
+        "@com_github_jackc_pgx_v5//pgxpool",
+    ],
+)

@@ -1,0 +1,94 @@
+# Requirements
+
+## Functional Requirements Summary
+
+### Primary Interaction
+
+Users manage their daily schedule by creating and modifying all-day events directly within a designated Google Calendar.
+
+* Specific titles on these all-day events represent different locations or statuses (e.g., `HOM`, `V`, `P12GRAN303`, `LIB-CENTRAL`).
+
+### How should ZenithPlanner interact with the Calendar
+
+* ZenithPlanner only interacts with events it manages. An event becomes managed if it's created by the system (default events) or if the user explicitly marks it (either via a hidden tag added by the system or by including `Add-To-ZenithPlanner: true` in the description). Events without these markers are ignored by the reconciliation logic but might be stored temporarily in the event cache.
+* If multiple managed events exist for the same day (as per the internal cache), the one with the most recent updated timestamp takes precedence. Older duplicate *managed* events for that day are automatically deleted from Google Calendar during the reconciliation process.
+
+### Visual Feedback
+
+Managed events in Google Calendar are automatically color-coded based on location type:
+
+* Home=Mauve
+* Vacation=Green
+* Office=Yellow
+* Library=Pale Green
+
+### Automatic Defaults
+
+The system ensures that for a configurable future period (e.g., 90 days), every day has a managed event. If the user hasn't specified a location for a day in that period, a default event (e.g., HOM) is automatically created and appropriately tagged/colored.
+
+### Recurring Event Input
+
+Users can efficiently set multiple days by creating a standard recurring event in Google Calendar with a recognized title. ZenithPlanner processes this, creates the corresponding individual managed daily events, and cleans up the original recurring event.
+
+### Statistics Viewing
+
+Users can view statistics (vacation days, study days, location breakdown) using their existing Grafana setup, which will query the `schedule_entries` table.
+
+### Optional Email Confirmations
+
+Users can configure the system to send email notifications confirming when their changes to managed events have been processed or when periodic background synchronizations result in updates. Specific email formats are defined for different types of changes. Emails are *not* sent for automatic default event creation.
+
+## Detailed Requirements
+
+This section details specific functional requirements and behaviors.
+
+### Event Identification
+
+ZenithPlanner identifies events as potentially relevant if they are all-day events on the configured calendar. It determines if an event is *managed* primarily by checking for a specific **private extended property** (e.g., zenithplanner\_managed: "true"). Alternatively, if an event lacks the property but contains Add-To-ZenithPlanner: true in its description, it's treated as managed.
+
+### Email Confirmation
+
+If enabled via configuration, after successfully processing sync operations reflecting user modifications *to managed events*, the Go backend **must send a confirmation email** to the user **via SMTP**.
+
+### Default Daily Entries & Horizon Maintenance
+
+* If no event **managed by ZenithPlanner** (via property or description tag) exists for a day within the rolling future horizon (checked via the internal cache), the backend must:
+* Ensure a default schedule\_entries record exists (using the **configured default location code**).
+* Create (or ensure exists) a corresponding **color-coded** all-day Google Calendar event titled with the default code **and tagged with the private property** on the configured calendar.
+* This background task runs periodically (e.g., daily) to maintain the horizon.
+
+### Rolling Future Horizon
+
+* The backend must proactively ensure that **tagged** schedule entries exist in the database and the configured Google Calendar (with correct colors) for a rolling period into the future.
+* This period should extend forward from the current date by the **configured number of days** (e.g., 56 days).
+
+### Daily Tracking Representation (Title Codes)
+
+The title of managed events determines the location/status and corresponding color:
+
+* `HOM`: Studying at Home. Color: **Mauve/Grape (ID 3\)**.
+* `V`: Vacation day. Color: **Green (ID 10\)**.
+* `P\d{2}[A-Z]+\d{3}` (e.g., P12GRAN303): Studying at the Office. Color: **Yellow (ID 5\)**.
+* `LIB*` (e.g., LIB, LIB-CENTRAL, LIB-UNI): Studying at a Library. Color: **Pale Green (ID 2\)**.
+
+### Recurring Event Handling
+
+When a user creates/modifies a recurring event with a recognized title pattern, the synchronization logic (incremental or full) will detect this, expand the recurrence into individual instances within the relevant time window, and update the `calendar_event_cache`. The reconciliation process will then handle tagging these instances and cleaning up the master event if necessary.
+
+### Statistics & Reporting (Based on Database Data)
+
+* **Data Source:** Statistics are generated by querying the `schedule_entries` table in the internal PostgreSQL database.
+* **Visualization Tool:** **Grafana** will be used to connect to the database and visualize statistics.
+* **Data Needed (for Grafana Dashboards):**
+    * Total count of days marked as `V`.
+    * Total count of days assigned a study location (`HOM`, `LIB*`, Office codes).
+    * Distribution of study days: Count/Percentage for `HOM`, `LIB*` (aggregated), and Office (aggregated).
+    * **Filtering:** Filtering by time period will be handled within Grafana dashboards querying the database.
+
+### User Interface (ZenithPlanner App)
+
+* **No dedicated UI for statistics:** The Go application will **not** serve a frontend for displaying statistics.
+* **Statistics Viewing:** User will view statistics via **Grafana dashboards** connected to the database.
+* **Required App Components:** The Go backend will still need:
+    * A **command-line flow** within the Go project for the initial OAuth authorization to obtain the necessary refresh token for Google services (Calendar API only).
+    * Logging to monitor synchronization status, background tasks, and errors.

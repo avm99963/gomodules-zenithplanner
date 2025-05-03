@@ -1,0 +1,24 @@
+# Docker compose file useful for local development, in order to start a
+# database with the adequate schema.
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: zenithplanner_postgres_dev
+    environment:
+      POSTGRES_DB: zenithplanner
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: your_db_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - zenithplanner_pg_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d zenithplanner"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  zenithplanner_pg_data:

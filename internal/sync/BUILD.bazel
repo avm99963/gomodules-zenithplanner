@@ -1,0 +1,24 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "sync",
+    srcs = [
+        "full.go",
+        "incremental.go",
+        "reconciliation.go",
+        "sync.go",
+        "tasks.go",
+        "utils.go",
+    ],
+    importpath = "gomodules.avm99963.com/zenithplanner/internal/sync",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//internal/calendar",
+        "//internal/config",
+        "//internal/database",
+        "//internal/email",
+        "@com_github_google_uuid//:uuid",
+        "@org_golang_google_api//calendar/v3:calendar",
+        "@org_golang_google_api//googleapi",
+    ],
+)

@@ -1,0 +1,13 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "scheduler",
+    srcs = ["scheduler.go"],
+    importpath = "gomodules.avm99963.com/zenithplanner/internal/scheduler",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//internal/config",
+        "//internal/sync",
+        "@com_github_robfig_cron_v3//:cron",
+    ],
+)

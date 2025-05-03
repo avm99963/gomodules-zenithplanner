@@ -1,0 +1,19 @@
+load("@rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "oauthcli_lib",
+    srcs = ["main.go"],
+    importpath = "gomodules.avm99963.com/zenithplanner/cmd/oauthcli",
+    visibility = ["//visibility:private"],
+    deps = [
+        "@org_golang_google_api//calendar/v3:calendar",
+        "@org_golang_x_oauth2//:oauth2",
+        "@org_golang_x_oauth2//google",
+    ],
+)
+
+go_binary(
+    name = "oauthcli",
+    embed = [":oauthcli_lib"],
+    visibility = ["//visibility:public"],
+)

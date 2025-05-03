@@ -1,0 +1,104 @@
+load("@aspect_bazel_lib//lib:expand_template.bzl", "expand_template")
+load("@aspect_bazel_lib//lib:testing.bzl", "assert_archive_contains")
+load("@rules_go//go:def.bzl", "go_binary", "go_library")
+load("@rules_multirun//:defs.bzl", "command", "multirun")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_image_index", "oci_push")
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
+
+go_library(
+    name = "backend_lib",
+    srcs = ["main.go"],
+    importpath = "gomodules.avm99963.com/zenithplanner/cmd/backend",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//internal/calendar",
+        "//internal/config",
+        "//internal/database",
+        "//internal/handler",
+        "//internal/scheduler",
+        "//internal/sync",
+    ],
+)
+
+go_binary(
+    name = "backend",
+    embed = [":backend_lib"],
+    visibility = ["//visibility:public"],
+)
+
+pkg_tar(
+    name = "app_layer",
+    srcs = [":backend"],
+)
+
+assert_archive_contains(
+    name = "test_app_layer",
+    archive = "app_layer.tar",
+    expected = ["backend"],
+)
+
+# Container image
+oci_image(
+    name = "image",
+    base = "@distroless_base",
+    entrypoint = ["/backend"],
+    exposed_ports = ["8080/tcp"],
+    labels = {
+        "org.opencontainers.image.title": "ZenithPlanner backend",
+        "org.opencontainers.image.description": "Backend for the ZenithPlanner application, which lets you keep track of your working location.",
+        "org.opencontainers.image.source": "https://gerrit.avm99963.com/plugins/gitiles/gomodules/zenithplanner",
+    },
+    tars = [":app_layer"],
+)
+
+oci_image_index(
+    name = "image_multiarch",
+    images = [":image"],
+    platforms = [
+        "@rules_go//go/toolchain:linux_amd64",
+        "@rules_go//go/toolchain:linux_arm64",
+    ],
+)
+
+# Use the value of --embed_label under --stamp, otherwise use a deterministic constant
+# value to ensure cache hits for actions that depend on this.
+expand_template(
+    name = "image_tags",
+    out = "_stamped.tags.txt",
+    stamp_substitutions = {"0abcdef": "{{STABLE_GIT_COMMIT}}"},
+    template = [
+        "0abcdef",
+        "latest",
+    ],
+)
+
+REPOS = {
+    "internal": "docker-registry.corp.avm99963.com/zenith-planner",
+    "github": "ghcr.io/avm99963/zenith-planner",
+}
+
+[
+    oci_push(
+        name = "push_image_" + name,
+        image = ":image_multiarch",
+        remote_tags = ":image_tags",
+        repository = repo_url,
+    )
+    for (name, repo_url) in REPOS.items()
+]
+
+[
+    command(
+        name = "command_push_image_" + name,
+        command = "push_image_" + name,
+    )
+    for (name, repo_url) in REPOS.items()
+]
+
+multirun(
+    name = "push_all",
+    commands = [
+        "command_push_image_" + name
+        for name in REPOS.keys()
+    ],
+)
