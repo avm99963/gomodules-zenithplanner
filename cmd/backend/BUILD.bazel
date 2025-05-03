@@ -47,6 +47,7 @@ oci_image(
         "org.opencontainers.image.title": "ZenithPlanner backend",
         "org.opencontainers.image.description": "Backend for the ZenithPlanner application, which lets you keep track of your working location.",
         "org.opencontainers.image.source": "https://gerrit.avm99963.com/plugins/gitiles/gomodules/zenithplanner",
+        "org.opencontainers.image.licenses": "AGPL-3.0-or-later",
     },
     tars = [":app_layer"],
 )
