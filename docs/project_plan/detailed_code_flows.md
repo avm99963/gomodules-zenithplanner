@@ -1,12 +1,11 @@
 # Detailed Code Flows (original plan)
 
 *** note
-**Warning:** this the project currently deviates a lot from this original plan.
-We only leave it here to immortalize the original plan. Please don't use it to
-understand how the project works, since it doesn't work in exactly this way.
+**Warning:** the implementation currently deviates a lot from this original
+plan. We only leave it here for historical reasons. Please don't use it to
+understand how the project works, since it does NOT work in exactly this way.
 
-You can make better use of your time by reading the code directly to understand
-the flows.
+You can make better use of your time by reading the code directly.
 ***
 
 This section outlines the key operational flows of the ZenithPlanner backend service.

@@ -14,8 +14,8 @@ learning, organizational benefit, and replicating a valued workflow.
 
 *** note
 **Warning:** the following documentation contains the initial project plan,
-which has changed slightly. Please keep in mind that the project works slightly
-differently from this plan, specially in the technical part.
+which doesn't fully match the current implementation. Please keep this in mind,
+specially regarding the technical part.
 ***
 
 - [Glossary](./glossary.md)
