@@ -77,6 +77,7 @@ need to do:
 ## More documentation
 
 - [Roadmap][roadmap]
+- [Set up a development environment][development]
 - [Release][release]
 
 [basetis]: https://www.basetis.com/
@@ -87,4 +88,5 @@ need to do:
 [compose]: ./examples/compose.yml
 [env]: ./examples/.env.example
 [roadmap]: ./docs/roadmap.md
+[development]: ./docs/development.md
 [release]: ./docs/release.md
